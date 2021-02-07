@@ -4,6 +4,7 @@ import { Subscription } from 'rxjs';
 
 import {
   ActionSheetController,
+  LoadingController,
   ModalController,
   NavController,
 } from '@ionic/angular';
@@ -13,6 +14,8 @@ import { CreateBookingComponent } from '../../../bookings/create-booking/create-
 import { Place } from '../../place.model';
 
 import { PlacesService } from '../../places.service';
+import { BookingsService } from '../../../bookings/bookings.service';
+import { AuthService } from '../../../auth/auth.service';
 
 @Component({
   selector: 'app-place-detail',
@@ -21,6 +24,7 @@ import { PlacesService } from '../../places.service';
 })
 export class PlaceDetailPage implements OnInit, OnDestroy {
   place: Place;
+  isBookable: boolean = false;
   private placeSubs: Subscription;
 
   constructor(
@@ -28,7 +32,10 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     private activatedRoute: ActivatedRoute,
     private placesService: PlacesService,
     private modalCtrl: ModalController,
-    private actionSheetCtrl: ActionSheetController
+    private actionSheetCtrl: ActionSheetController,
+    private bookingsService: BookingsService,
+    private loadingCtrl: LoadingController,
+    private authService: AuthService
   ) {}
 
   ngOnInit() {
@@ -41,6 +48,7 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
         .getPlace(paramMap.get('placeId'))
         .subscribe((place) => {
           this.place = place;
+          this.isBookable = place.userId !== this.authService.userId;
         });
     });
   }
@@ -87,6 +95,25 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
     });
     await createBookingModal.present();
     const { data, role } = await createBookingModal.onWillDismiss();
-    console.log(data, role);
+    const loading = await this.loadingCtrl.create({
+      message: 'Booking place...',
+    });
+    if (role === 'confirm') {
+      await loading.present();
+      this.bookingsService
+        .addBooking(
+          this.place.id,
+          this.place.title,
+          this.place.imageUrl,
+          data.bookingData.firstName,
+          data.bookingData.lastName,
+          data.bookingData.guestNumber,
+          data.bookingData.startDate,
+          data.bookingData.endDate
+        )
+        .subscribe(async () => {
+          await loading.dismiss();
+        });
+    }
   }
 }

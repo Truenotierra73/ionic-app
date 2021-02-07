@@ -8,7 +8,7 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <ion-segment value="all" (ionChange)="onFilterUpdate($event)">
+  <ion-segment value="all" (ionChange)="onFilterUpdate($event.detail.value)">
     <ion-segment-button value="all">
       <ion-label>All Places</ion-label>
     </ion-segment-button>
@@ -16,25 +16,33 @@
       <ion-label>Bookable Places</ion-label>
     </ion-segment-button>
   </ion-segment>
-  <ion-grid>
+  <ion-grid *ngIf="!relevantPlaces || relevantPlaces.length <= 0">
+    <ion-row>
+      <ion-col class="ion-text-center" size="12" size-sm="8" offset-sm="2">
+        <p>There are no bookable places right now, please come back later!</p>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+  <ion-grid *ngIf="relevantPlaces.length > 0">
     <ion-row>
       <ion-col class="ion-text-center" size="12" size-sm="8" offset-sm="2">
         <ion-card>
           <ion-card-header>
-            <ion-card-title>{{ loadedPlaces[0].title }}</ion-card-title>
+            <ion-card-title>{{ relevantPlaces[0].title }}</ion-card-title>
             <ion-card-subtitle
-              >{{ loadedPlaces[0].price | currency }} / Nigth</ion-card-subtitle
+              >{{ relevantPlaces[0].price | currency }} /
+              Nigth</ion-card-subtitle
             >
           </ion-card-header>
-          <ion-img [src]="loadedPlaces[0].imageUrl"></ion-img>
+          <ion-img [src]="relevantPlaces[0].imageUrl"></ion-img>
           <ion-card-content>
-            <p>{{ loadedPlaces[0].description }}</p>
+            <p>{{ relevantPlaces[0].description }}</p>
           </ion-card-content>
           <div class="ion-float-center">
             <ion-button
               color="primary"
               fill="clear"
-              [routerLink]="['/', 'places', 'tabs', 'discover', loadedPlaces[0].id ]"
+              [routerLink]="['/', 'places', 'tabs', 'discover', relevantPlaces[0].id ]"
             >
               More
             </ion-button>
@@ -44,12 +52,9 @@
     </ion-row>
     <ion-row>
       <ion-col class="ion-text-center" size="12" size-sm="8" offset-sm="2">
-        <ion-virtual-scroll
-          [items]="listedLoadedPlaces"
-          approxItemHeight="72px"
-        >
+        <ion-list>
           <ion-item
-            *virtualItem="let place"
+            *ngFor="let place of relevantPlaces | slice:1"
             [routerLink]="['/', 'places', 'tabs', 'discover', place.id ]"
             detail
           >
@@ -61,7 +66,7 @@
               <p>{{ place.description }}</p>
             </ion-label>
           </ion-item>
-        </ion-virtual-scroll>
+        </ion-list>
       </ion-col>
     </ion-row>
   </ion-grid>
