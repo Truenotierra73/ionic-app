@@ -3,7 +3,8 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  backendUrl: 'https://ionic-angular-course-27592-default-rtdb.firebaseio.com',
 };
 
 /*

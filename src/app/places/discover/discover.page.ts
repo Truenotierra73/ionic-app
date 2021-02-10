@@ -15,6 +15,7 @@ import { AuthService } from '../../auth/auth.service';
 export class DiscoverPage implements OnInit, OnDestroy {
   loadedPlaces: Place[] = [];
   relevantPlaces: Place[] = [];
+  isLoading: boolean = false;
   private filter: string = 'all';
   private placesSubs: Subscription;
 
@@ -23,12 +24,17 @@ export class DiscoverPage implements OnInit, OnDestroy {
     private authService: AuthService
   ) {}
 
-  ngOnInit() {}
-
-  ionViewWillEnter() {
+  ngOnInit() {
     this.placesSubs = this.placesService.places.subscribe((places) => {
       this.loadedPlaces = places;
       this.onFilterUpdate(this.filter);
+    });
+  }
+
+  ionViewWillEnter() {
+    this.isLoading = true;
+    this.placesService.fetchPlaces().subscribe(() => {
+      this.isLoading = false;
     });
   }
 
