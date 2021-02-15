@@ -22,6 +22,21 @@
         <p>{{ place.description }}</p>
       </ion-col>
     </ion-row>
+    <ion-row>
+      <ion-col class="ion-text-center ion-padding" size-sm="6" offset-sm="3">
+        <p>{{ place.location.address }}</p>
+      </ion-col>
+    </ion-row>
+    <ion-row>
+      <ion-col class="ion-text-center ion-no-padding" size-sm="6" offset-sm="3">
+        <ion-img
+          class="location-image"
+          role="button"
+          [src]="place.location.staticMapImageUrl"
+          (click)="onShowFullMap()"
+        ></ion-img>
+      </ion-col>
+    </ion-row>
     <ion-row *ngIf="isBookable">
       <ion-col class="ion-text-center" size-sm="6" offset-sm="3">
         <ion-button class="ion-margin" (click)="onBookPlace()">

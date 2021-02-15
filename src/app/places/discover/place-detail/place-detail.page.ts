@@ -11,6 +11,7 @@ import {
 } from '@ionic/angular';
 
 import { CreateBookingComponent } from '../../../bookings/create-booking/create-booking.component';
+import { MapModalComponent } from '../../../shared/map-modal/map-modal.component';
 
 import { Place } from '../../place.model';
 
@@ -139,5 +140,18 @@ export class PlaceDetailPage implements OnInit, OnDestroy {
           await loading.dismiss();
         });
     }
+  }
+
+  async onShowFullMap() {
+    const mapModal = await this.modalCtrl.create({
+      component: MapModalComponent,
+      componentProps: {
+        center: [this.place.location.lat, this.place.location.lng],
+        selectable: false,
+        closeButtonText: 'Close',
+        title: this.place.location.address,
+      },
+    });
+    await mapModal.present();
   }
 }
