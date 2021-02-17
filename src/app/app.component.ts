@@ -3,6 +3,9 @@ import { Router } from '@angular/router';
 
 import { Platform } from '@ionic/angular';
 
+import { Plugins, Capacitor } from '@capacitor/core';
+const { StatusBar, SplashScreen } = Plugins;
+
 import { AuthService } from './auth/auth.service';
 
 @Component({
@@ -20,7 +23,11 @@ export class AppComponent {
   }
 
   initializeApp() {
-    this.platform.ready().then(() => {});
+    this.platform.ready().then(() => {
+      if (Capacitor.isPluginAvailable('SplashScreen')) {
+        SplashScreen.hide();
+      }
+    });
   }
 
   onLogout() {
