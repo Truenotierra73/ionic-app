@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { IonSegment } from '@ionic/angular';
 import { Subscription } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 import { Place } from '../place.model';
 
@@ -45,9 +45,11 @@ export class DiscoverPage implements OnInit, OnDestroy {
   }
 
   onFilterUpdate(filter: string) {
-    const isShown = (place) =>
-      filter === 'all' || place.userId !== this.authService.userId;
-    this.relevantPlaces = this.loadedPlaces.filter(isShown);
-    this.filter = filter;
+    this.authService.userId.pipe(take(1)).subscribe((userId) => {
+      const isShown = (place) =>
+        filter === 'all' || place.userId !== this.authService.userId;
+      this.relevantPlaces = this.loadedPlaces.filter(isShown);
+      this.filter = filter;
+    });
   }
 }

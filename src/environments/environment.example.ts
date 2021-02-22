@@ -14,4 +14,5 @@ export const environment = {
     staticMapBaseUrl: '<STATIC_MAP_URL>',
     apiKey: '<YOUR_API_KEY>',
   },
+  firebaseKey: '<YOUR_FIREBASE_KEY>',
 };

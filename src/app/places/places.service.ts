@@ -38,56 +38,62 @@ export class PlacesService {
   ) {}
 
   getPlace(id: string) {
-    return this.httpClient
-      .get<PlaceData>(this.backendUrl + `/offered-places/${id}.json`)
-      .pipe(
-        map((placeData) => {
-          return new Place(
-            id,
-            placeData.title,
-            placeData.description,
-            placeData.imageUrl,
-            placeData.price,
-            new Date(placeData.availableFrom),
-            new Date(placeData.availableTo),
-            placeData.userId,
-            placeData.location
-          );
-        })
-      );
+    return this.authService.token.pipe(
+      take(1),
+      switchMap((token) => {
+        return this.httpClient.get<PlaceData>(
+          this.backendUrl + `/offered-places/${id}.json?access_token=${token}`
+        );
+      }),
+      map((placeData) => {
+        return new Place(
+          id,
+          placeData.title,
+          placeData.description,
+          placeData.imageUrl,
+          placeData.price,
+          new Date(placeData.availableFrom),
+          new Date(placeData.availableTo),
+          placeData.userId,
+          placeData.location
+        );
+      })
+    );
   }
 
   fetchPlaces() {
-    return this.httpClient
-      .get<{ [key: string]: PlaceData }>(
-        this.backendUrl + '/offered-places.json'
-      )
-      .pipe(
-        map((resData) => {
-          const places = [];
-          for (const key in resData) {
-            if (resData.hasOwnProperty(key)) {
-              places.push(
-                new Place(
-                  key,
-                  resData[key].title,
-                  resData[key].description,
-                  resData[key].imageUrl,
-                  resData[key].price,
-                  new Date(resData[key].availableFrom),
-                  new Date(resData[key].availableTo),
-                  resData[key].userId,
-                  resData[key].location
-                )
-              );
-            }
+    return this.authService.token.pipe(
+      take(1),
+      switchMap((token) => {
+        return this.httpClient.get<{ [key: string]: PlaceData }>(
+          this.backendUrl + `/offered-places.json?access_token=${token}`
+        );
+      }),
+      map((resData) => {
+        const places = [];
+        for (const key in resData) {
+          if (resData.hasOwnProperty(key)) {
+            places.push(
+              new Place(
+                key,
+                resData[key].title,
+                resData[key].description,
+                resData[key].imageUrl,
+                resData[key].price,
+                new Date(resData[key].availableFrom),
+                new Date(resData[key].availableTo),
+                resData[key].userId,
+                resData[key].location
+              )
+            );
           }
-          return places;
-        }),
-        tap((places) => {
-          this._places.next(places);
-        })
-      );
+        }
+        return places;
+      }),
+      tap((places) => {
+        this._places.next(places);
+      })
+    );
   }
 
   addPlace(
@@ -99,38 +105,59 @@ export class PlacesService {
     location: PlaceLocation
   ) {
     let generatedId: string;
-    const newPlace = new Place(
-      Math.random().toString(),
-      title,
-      description,
-      'https://sevillaconsciente.org/wp-content/uploads/2020/12/img_prod_nueva_york_manhattan_1170x600.jpg',
-      price,
-      dateFrom,
-      dateTo,
-      this.authService.userId,
-      location
-    );
-    return this.httpClient
-      .post<{ name: string }>(this.backendUrl + '/offered-places.json', {
-        ...newPlace,
-        id: null,
+    let fetchedUserId: string;
+    let newPlace: Place;
+    return this.authService.userId.pipe(
+      take(1),
+      switchMap((userId) => {
+        fetchedUserId = userId;
+        return this.authService.token;
+      }),
+      take(1),
+      switchMap((token) => {
+        if (!fetchedUserId) {
+          throw new Error('No user found!');
+        }
+        newPlace = new Place(
+          Math.random().toString(),
+          title,
+          description,
+          'https://sevillaconsciente.org/wp-content/uploads/2020/12/img_prod_nueva_york_manhattan_1170x600.jpg',
+          price,
+          dateFrom,
+          dateTo,
+          fetchedUserId,
+          location
+        );
+        return this.httpClient.post<{ name: string }>(
+          this.backendUrl + `/offered-places.json?access_token=${token}`,
+          {
+            ...newPlace,
+            id: null,
+          }
+        );
+      }),
+      switchMap((resData) => {
+        generatedId = resData.name;
+        return this.places;
+      }),
+      take(1),
+      tap((places) => {
+        newPlace.id = generatedId;
+        this._places.next(places.concat(newPlace));
       })
-      .pipe(
-        switchMap((resData) => {
-          generatedId = resData.name;
-          return this.places;
-        }),
-        take(1),
-        tap((places) => {
-          newPlace.id = generatedId;
-          this._places.next(places.concat(newPlace));
-        })
-      );
+    );
   }
 
   updatePlace(placeId: string, title: string, description: string) {
     let updatedPlaces: Place[];
-    return this.places.pipe(
+    let fetchedToken: string;
+    return this.authService.token.pipe(
+      take(1),
+      switchMap((token) => {
+        fetchedToken = token;
+        return this.places;
+      }),
       take(1),
       switchMap((places) => {
         if (!places || places.length <= 0) {
@@ -155,7 +182,8 @@ export class PlacesService {
           oldPlace.location
         );
         return this.httpClient.put(
-          this.backendUrl + `/offered-places/${placeId}.json`,
+          this.backendUrl +
+            `/offered-places/${placeId}.json?access_token=${fetchedToken}`,
           { ...updatedPlaces[updatedPlaceIndex], id: null }
         );
       }),

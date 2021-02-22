@@ -3,7 +3,14 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+  production: false,
+  backendUrl: 'https://ionic-angular-course-27592-default-rtdb.firebaseio.com',
+  locationIQ: {
+    reverseBaseUrl: 'https://us1.locationiq.com/v1/reverse.php',
+    staticMapBaseUrl: 'https://maps.locationiq.com/v2/staticmap',
+    apiKey: 'pk.d2dbd11fda4da56db54e445ad7b28ba0',
+  },
+  firebaseKey: 'AIzaSyDygzmTuTtuMrjOAX7tJm5laa891cK9W0g',
 };
 
 /*

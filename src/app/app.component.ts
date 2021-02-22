@@ -1,5 +1,7 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+
+import { Subscription } from 'rxjs';
 
 import { Platform } from '@ionic/angular';
 
@@ -13,13 +15,31 @@ import { AuthService } from './auth/auth.service';
   templateUrl: 'app.component.html',
   styleUrls: ['app.component.scss'],
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
+  private authSubs: Subscription;
+  private previousAuthState: boolean = false;
+
   constructor(
     private platform: Platform,
     private authService: AuthService,
     private router: Router
   ) {
     this.initializeApp();
+  }
+
+  ngOnInit() {
+    this.authSubs = this.authService.userIsAuthenticated.subscribe((isAuth) => {
+      if (!isAuth && this.previousAuthState !== isAuth) {
+        this.router.navigate(['/auth']);
+      }
+      this.previousAuthState = isAuth;
+    });
+  }
+
+  ngOnDestroy() {
+    if (this.authSubs) {
+      this.authSubs.unsubscribe();
+    }
   }
 
   initializeApp() {
@@ -32,6 +52,5 @@ export class AppComponent {
 
   onLogout() {
     this.authService.logout();
-    this.router.navigate(['/auth']);
   }
 }
